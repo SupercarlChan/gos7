@@ -25,10 +25,15 @@ const (
 	isoTCP           = 102 //default isotcp port
 	isoHSize         = 7   // TPKT+COTP Header Size
 	minPduSize       = 16
-	// Client Connection Type
-	connectionTypePG    = 1 // Connect to the PLC as a PG
-	connectionTypeOP    = 2 // Connect to the PLC as an OP
-	connectionTypeBasic = 3 // Basic connection
+)
+
+type ConnectType int
+
+// Client Connection Type
+const (
+	ConnectionTypePG    ConnectType = 1 // Connect to the PLC as a PG
+	ConnectionTypeOP    ConnectType = 2 // Connect to the PLC as an OP
+	ConnectionTypeBasic ConnectType = 3 // Basic connection
 )
 
 // TCPClientHandler implements Packager and Transporter interface.
@@ -38,20 +43,20 @@ type TCPClientHandler struct {
 }
 
 // NewTCPClientHandler allocates a new TCPClientHandler.
-func NewTCPClientHandler(address string, rack int, slot int) *TCPClientHandler {
+func NewTCPClientHandler(address string, connectType ConnectType, rack int, slot int) *TCPClientHandler {
 	h := &TCPClientHandler{}
 	h.Address = address
 	h.Timeout = tcpTimeout
 	h.IdleTimeout = tcpIdleTimeout
-	h.ConnectionType = connectionTypePG // Connect to the PLC as a PG
+	h.ConnectionType = int(connectType)
 	remoteTSAP := uint16(h.ConnectionType)<<8 + (uint16(rack) * 0x20) + uint16(slot)
 	h.setConnectionParameters(address, 0x0100, remoteTSAP)
 	return h
 }
 
 //TCPClient creator for a TCP client with address, rack and slot, implement from interface client
-func TCPClient(address string, rack int, slot int) Client {
-	handler := NewTCPClientHandler(address, rack, slot)
+func TCPClient(address string, connectType ConnectType, rack int, slot int) Client {
+	handler := NewTCPClientHandler(address, connectType, rack, slot)
 	return NewClient(handler)
 }
 
